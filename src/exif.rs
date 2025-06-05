@@ -171,6 +171,7 @@ pub(crate) fn extract_exif_with_mime(
         MimeImage::Raf => RafInfo::parse(buf)
             .map(|res| (res.1.exif_data, state.clone()))
             .map_err(|e| nom_error_to_parsing_error_with_state(e, state))?,
+	MimeImage::Cr3 => cr3_extract_exif(state, buf)?,
     };
     Ok((exif_data, state))
 }
@@ -213,6 +214,13 @@ fn heif_extract_exif(
 
     let data = data.and_then(|x| check_exif_header2(x).map(|x| x.0).ok());
 
+    Ok((data, state))
+}
+
+fn cr3_extract_exif(
+    state: Option<ParsingState>,
+    buf: &[u8],
+) -> Result<(Option<&[u8]>, Option<ParsingState>), ParsingErrorState> {
     Ok((data, state))
 }
 
