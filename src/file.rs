@@ -123,6 +123,7 @@ pub enum FileFormat {
     /// mov
     QuickTime,
     MP4,
+    CR3,
 
     /// webm, mkv, mka, mk3d
     Ebml,
@@ -175,6 +176,7 @@ impl Display for FileFormat {
             Self::Heif => "HEIF/HEIC".fmt(f),
             Self::QuickTime => "QuickTime".fmt(f),
             Self::MP4 => "MP4".fmt(f),
+            Self::CR3 => "CR3".fmt(f),
             Self::Ebml => "EBML".fmt(f),
         }
     }
@@ -224,7 +226,7 @@ fn parse_bmff_mime(input: &[u8]) -> crate::Result<Mime> {
 
     // Check if it is a CR3 file
     if CR3_BRAND_NAMES.iter().any(|v| v.as_bytes() == major_brand) {
-	return Ok(Mime::Image(MimeImage::Cr3));
+        return Ok(Mime::Image(MimeImage::Cr3));
     }
 
     // Check compatible brands
@@ -296,8 +298,21 @@ fn check_bmff(input: &[u8]) -> crate::Result<FileFormat> {
         return Ok(FileFormat::MP4);
     }
 
+    // Check if it is a CR3 file (major brand)
+    if CR3_BRAND_NAMES.iter().any(|v| v.as_bytes() == major_brand) {
+        return Ok(FileFormat::CR3);
+    }
+
     // Check compatible brands
     let compatible_brands = get_compatible_brands(ftyp.body_data())?;
+
+    // CR3 check in compatible brands
+    if CR3_BRAND_NAMES
+        .iter()
+        .any(|v| compatible_brands.iter().any(|x| v.as_bytes() == *x))
+    {
+        return Ok(FileFormat::CR3);
+    }
 
     if QT_BRAND_NAMES
         .iter()
